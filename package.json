@@ -1,0 +1,15 @@
+{
+  "name": "imdb",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "scrape": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "imdb-scrapper": "2.3.0",
+    "node-fetch": "2.6.0"
+  }
+}

@@ -1,5 +1,7 @@
 const { getFull } = require('imdb-scrapper')
 const fetch = require('node-fetch')
+const { formatJson } = require('./format')
+const fs = require('fs')
 
 const ids = [
   'tt2527338',
@@ -39,28 +41,26 @@ const scrapeTrailer = async movie => {
   const data = await res.json()
   const videos = data.videos.results
 
-  // let trailer = videos[0].key
-  // let isOfficial = false
-
-  // // for (let v of videos) {
-  // //   let name = v.name.toLowerCase()
-  // //   if (name.indexOf('official') > -1 || name.indexOf('trailer') > -1 || name.indexOf('main') > -1) {
-  // //     trailer = v.key
-  // //     break
-  // //   }
-  // // }
-
-  // movie.trailer = {
-  //   trailer: `https://www.youtube.com/watch?v=${trailer}`,
-  //   thumbnail: `https://img.youtube.com/vi/${trailer}/maxresdefault.jpg`,
-  // }
-
   movie.trailers = videos.map(v => ({
     trailer: `https://www.youtube.com/watch?v=${v.key}`,
     thumbnail: `https://img.youtube.com/vi/${v.key}/maxresdefault.jpg`,
   }))
 
   return movie
+}
+
+const scrape = async movie => {
+  const { id } = movie
+  const host = 'http://www.omdbapi.com'
+  const apiKey = `8c68a543&`
+  const path = `?apikey=${apiKey}i=${id}`
+  const res = await fetch(host + path)
+  const data = await res.json()
+  const mapping = {
+    rated: 'rated',
+  }
+  const result = formatJson(data, mapping)
+  return { movie, ...result }
 }
 
 Promise.all(ids.map(id => scrapeIMDB(id)))
@@ -70,6 +70,14 @@ Promise.all(ids.map(id => scrapeIMDB(id)))
     return Promise.all(ps)
   })
   .then(res => {
-    console.log(JSON.stringify(res))
+    let ps = res.map(movie => scrape(movie))
+
+    return Promise.all(ps)
+  })
+  .then(res => {
+    console.log(res)
+    let output = JSON.stringify(res)
+    fs.writeFileSync('output.json', output)
+    // console.log(JSON.stringify(res))
   })
   .then(() => process.exit(0))
